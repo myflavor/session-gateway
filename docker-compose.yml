@@ -1,0 +1,15 @@
+services:
+  session-gateway:
+    image: ghcr.io/myflavor/session-gateway:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PUID: "1002"        # 宿主机上 ./data/session 的属主
+      PGID: "1002"        # 宿主机上的属组
+      # BASH_UID 默认 PUID+1，一般不用设
+      MEMGATE_CONFIG: /etc/session-gateway.json
+      TZ: Asia/Shanghai
+    volumes:
+      - ./config.json:/etc/session-gateway.json:ro
+      - ./data:/data
