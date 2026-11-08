@@ -37,7 +37,7 @@ func main() {
 func run() error {
 	log := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	cfgPath := os.Getenv("MEMGATE_CONFIG")
+	cfgPath := os.Getenv("CONFIG_PATH")
 	if cfgPath == "" {
 		cfgPath = "config.yaml"
 	}
@@ -51,8 +51,8 @@ func run() error {
 		return err
 	}
 
-	// MEMGATE_BASH_USER 为空时用当前用户（本地开发，读写都行）。
-	runner, err := bash.New(cfg.DataDir, os.Getenv("MEMGATE_BASH_USER"))
+	// BASH_USER 为空时用当前用户（本地开发，读写都行）。
+	runner, err := bash.New(cfg.DataDir, os.Getenv("BASH_USER"))
 	if err != nil {
 		return err
 	}

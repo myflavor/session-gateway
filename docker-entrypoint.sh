@@ -48,7 +48,7 @@ mkdir -p /data/session
 chown "$PUID:$PGID" /data/session
 chmod 750 /data/session
 
-export MEMGATE_BASH_USER="$BASH_USER"
+export BASH_USER="$BASH_USER"
 
 # 保留 setuid/setgid 能力：主进程已降权到 writer，没有它就无法再把
 # session_bash 的子进程降到 reader
