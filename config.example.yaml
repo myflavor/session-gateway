@@ -2,7 +2,7 @@
 listen: ":8080"
 
 # 会话存档目录
-data-dir: "/data/session"
+data-dir: "/session"
 
 # 访问 MCP 的密钥，客户端用 Authorization: Bearer <key>
 key-list:

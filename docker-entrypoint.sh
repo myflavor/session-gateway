@@ -44,9 +44,9 @@ if $READONLY; then
 fi
 
 # 不递归 chown：存档可能有上万个文件，启动会卡很久
-mkdir -p /data/session
-chown "$PUID:$PGID" /data/session
-chmod 750 /data/session
+mkdir -p /session
+chown "$PUID:$PGID" /session
+chmod 750 /session
 
 export BASH_USER="$BASH_USER"
 

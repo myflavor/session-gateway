@@ -10,12 +10,12 @@
 ```bash
 cp config.example.yaml config.yaml
 $EDITOR config.yaml          # 改 key-list、proxy-list
-mkdir -p data/session && sudo chown -R 1002:1002 data/session   # 换成你的 UID/GID
+mkdir -p session && sudo chown -R 1002:1002 session   # 换成你的 UID/GID
 
 PUID=1002 PGID=1002 docker compose up -d
 ```
 
-`PUID`/`PGID` 必须和宿主机上 `data/session` 的属主一致，否则写不进去。
+`PUID`/`PGID` 必须和宿主机上 `session` 目录的属主一致，否则写不进去。
 
 想让 agent 只能读、不能改存档，再加一个 `BASH_UID`（任意未占用的 uid）：
 
@@ -29,7 +29,7 @@ PUID=1002 PGID=1002 BASH_UID=1003 docker compose up -d
 
 ```yaml
 listen: ":8080"
-data-dir: "/data/session"
+data-dir: "/session"
 key-list:
   - "mg_..."
 proxy-list:
@@ -38,7 +38,7 @@ proxy-list:
 ```
 
 客户端把 base_url 指向 `http://<nas>:8080/anthropic`，请求会转发到上游，
-同时把这一轮的提问与答复追加进 `/data/session/<会话>.jsonl`。
+同时把这一轮的提问与答复追加进 `/session/<会话>.jsonl`。
 
 ## MCP
 
@@ -80,7 +80,7 @@ proxy-list:
 JSONL 的好处是 `grep` 能按行工作：搜到的就是一行，而不是一大段文本。
 
 ```bash
-grep -rn "403" /data/session/          # 哪些会话提过
+grep -rn "403" /session/          # 哪些会话提过
 grep -n "403" abc-1234abcd.jsonl       # 定位到行号
 sed -n '120,160p' abc-1234abcd.jsonl   # 读那一段
 jq -r 'select(.role=="user") | .content' abc-1234abcd.jsonl

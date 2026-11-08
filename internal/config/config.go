@@ -41,7 +41,7 @@ func (c *Config) applyDefaults() {
 		c.Listen = ":8080"
 	}
 	if c.DataDir == "" {
-		c.DataDir = "/data/session"
+		c.DataDir = "/session"
 	}
 }
 

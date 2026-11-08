@@ -5,10 +5,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      PUID: "1002"        # 宿主机上 ./data/session 的属主
+      PUID: "1002"        # 宿主机上 ./session 的属主
       PGID: "1002"        # 宿主机上的属组
       # BASH_UID 不设则不降权（bash 可读写）；设了则只读
       TZ: Asia/Shanghai
     volumes:
       - ./config.yaml:/etc/session-gateway.yaml:ro
-      - ./data:/data
+      - ./session:/session
