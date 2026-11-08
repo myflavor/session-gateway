@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"os"
 	"strings"
@@ -74,7 +75,7 @@ func (c *Config) KeyAllowed(key string) bool {
 		return false
 	}
 	for _, k := range c.KeyList {
-		if k == key {
+		if subtle.ConstantTimeCompare([]byte(k), []byte(key)) == 1 {
 			return true
 		}
 	}

@@ -66,21 +66,9 @@ func run() error {
 	mcpSrv := mcp.New(cfg.KeyList, runner, store)
 	mcpHandler := requireKey(cfg, mcpSrv.Handler())
 
-	mux := http.NewServeMux()
-	mux.Handle("/mcp", mcpHandler)
-	mux.Handle("/mcp/", mcpHandler)
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "ok")
-	})
-	// 其余请求交给代理；路径首段不匹配任何上游时回 404。
-	root := &router{px: px, next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r)
-	})}
-
 	srv := &http.Server{
 		Addr:              cfg.Listen,
-		Handler:           routeMux(mux, root),
+		Handler:           route(px, mcpHandler),
 		ReadHeaderTimeout: 20 * time.Second,
 	}
 
@@ -106,23 +94,18 @@ func run() error {
 	return srv.Shutdown(shutdownCtx)
 }
 
-func routeMux(fixed *http.ServeMux, px http.Handler) http.Handler {
+func route(px *proxy.Proxy, mcpHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/mcp") || r.URL.Path == "/healthz" {
-			fixed.ServeHTTP(w, r)
-			return
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/mcp"):
+			mcpHandler.ServeHTTP(w, r)
+		case r.URL.Path == "/healthz":
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, "ok")
+		default:
+			px.ServeHTTP(w, r, http.NotFoundHandler())
 		}
-		px.ServeHTTP(w, r)
 	})
-}
-
-type router struct {
-	px   *proxy.Proxy
-	next http.Handler
-}
-
-func (rt *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	rt.px.ServeHTTP(w, r, rt.next)
 }
 
 // requireKey 在 HTTP 层校验，未鉴权的请求进不到 MCP。

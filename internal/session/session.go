@@ -39,8 +39,6 @@ func New(dir string) (*Store, error) {
 	return &Store{dir: dir, locks: map[string]*sync.Mutex{}}, nil
 }
 
-func (s *Store) Dir() string { return s.dir }
-
 func FileName(sessionID string) string {
 	clean := strings.Map(func(r rune) rune {
 		switch {
@@ -94,13 +92,11 @@ func (s *Store) lockFor(name string) *sync.Mutex {
 }
 
 type Session struct {
-	File      string    `json:"file"`
-	SessionID string    `json:"session_id"`
-	First     string    `json:"first"`
-	Lines     int       `json:"lines"`
-	Bytes     int64     `json:"bytes"`
-	Started   time.Time `json:"started"`
-	Updated   time.Time `json:"updated"`
+	File    string    `json:"file"`
+	First   string    `json:"first"`
+	Lines   int       `json:"lines"`
+	Bytes   int64     `json:"bytes"`
+	Updated time.Time `json:"updated"`
 }
 
 func (s *Store) List() ([]Session, error) {
@@ -124,7 +120,7 @@ func (s *Store) List() ([]Session, error) {
 			Bytes:   info.Size(),
 			Updated: info.ModTime(),
 		}
-		sess.SessionID, sess.First, sess.Started = head(path)
+		sess.First = firstUserMessage(path)
 		out = append(out, sess)
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Updated.After(out[j].Updated) })
@@ -146,33 +142,24 @@ func countLines(path string) int {
 	return n
 }
 
-func head(path string) (sessionID, first string, started time.Time) {
+func firstUserMessage(path string) string {
 	f, err := os.Open(path)
 	if err != nil {
-		return "", "", time.Time{}
+		return ""
 	}
 	defer f.Close()
 	sc := bufio.NewScanner(f)
 	sc.Buffer(make([]byte, 0, 64*1024), 8*1024*1024)
 	for sc.Scan() {
 		var m Message
-		if json.Unmarshal(sc.Bytes(), &m) != nil {
+		if json.Unmarshal(sc.Bytes(), &m) != nil || m.Role != "user" {
 			continue
 		}
-		if started.IsZero() {
-			started = m.TS
-		}
-		if sessionID == "" {
-			sessionID = m.SessionID
-		}
-		if first == "" && m.Role == "user" {
-			first = clip(textOf(m.Content), 80)
-		}
-		if sessionID != "" && first != "" {
-			break
+		if s := clip(textOf(m.Content), 80); s != "" {
+			return s
 		}
 	}
-	return sessionID, first, started
+	return ""
 }
 
 func textOf(raw json.RawMessage) string {
