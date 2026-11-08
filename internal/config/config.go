@@ -1,22 +1,23 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
-type Upstream struct {
-	Path   string `json:"path"`
-	Origin string `json:"origin"`
+type Proxy struct {
+	Path   string `yaml:"path"`
+	Origin string `yaml:"origin"`
 }
 
 type Config struct {
-	Listen    string     `json:"listen"`
-	MCPKeys   []string   `json:"mcp_keys"`
-	Upstreams []Upstream `json:"upstreams"`
-	DataDir   string     `json:"data_dir"`
+	Listen    string   `yaml:"listen"`
+	KeyList   []string `yaml:"key-list"`
+	ProxyList []Proxy  `yaml:"proxy-list"`
+	DataDir   string   `yaml:"data-dir"`
 }
 
 func Load(path string) (*Config, error) {
@@ -25,7 +26,7 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("读取 %s: %w", path, err)
 	}
 	var c Config
-	if err := json.Unmarshal(b, &c); err != nil {
+	if err := yaml.Unmarshal(b, &c); err != nil {
 		return nil, fmt.Errorf("解析 %s: %w", path, err)
 	}
 	c.applyDefaults()
@@ -45,24 +46,24 @@ func (c *Config) applyDefaults() {
 }
 
 func (c *Config) validate() error {
-	for i, u := range c.Upstreams {
-		if strings.TrimSpace(u.Path) == "" {
-			return fmt.Errorf("upstreams[%d] 缺少 path", i)
+	for i, p := range c.ProxyList {
+		if strings.TrimSpace(p.Path) == "" {
+			return fmt.Errorf("proxy-list[%d] 缺少 path", i)
 		}
-		if !strings.HasPrefix(u.Origin, "http://") && !strings.HasPrefix(u.Origin, "https://") {
-			return fmt.Errorf("upstreams[%d] 的 origin 必须是 http(s)://", i)
+		if strings.ContainsAny(p.Path, "/?#") {
+			return fmt.Errorf("proxy-list[%d] 的 path 不能含 / ? #", i)
 		}
-		if strings.ContainsAny(u.Path, "/?#") {
-			return fmt.Errorf("upstreams[%d] 的 path 不能含 / ? #", i)
+		if !strings.HasPrefix(p.Origin, "http://") && !strings.HasPrefix(p.Origin, "https://") {
+			return fmt.Errorf("proxy-list[%d] 的 origin 必须是 http(s)://", i)
 		}
 	}
 	return nil
 }
 
-func (c *Config) Upstream(seg string) *Upstream {
-	for i := range c.Upstreams {
-		if c.Upstreams[i].Path == seg {
-			return &c.Upstreams[i]
+func (c *Config) Proxy(seg string) *Proxy {
+	for i := range c.ProxyList {
+		if c.ProxyList[i].Path == seg {
+			return &c.ProxyList[i]
 		}
 	}
 	return nil
@@ -72,7 +73,7 @@ func (c *Config) KeyAllowed(key string) bool {
 	if key == "" {
 		return false
 	}
-	for _, k := range c.MCPKeys {
+	for _, k := range c.KeyList {
 		if k == key {
 			return true
 		}

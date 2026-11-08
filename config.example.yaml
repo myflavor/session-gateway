@@ -1,0 +1,16 @@
+# 监听地址，MCP 与代理共用
+listen: ":8080"
+
+# 访问 MCP 的密钥，客户端用 Authorization: Bearer <key>
+key-list:
+  - "mg_change_me_to_a_random_string"
+
+# 上游列表：/path/v1/messages 转发到 origin/v1/messages
+proxy-list:
+  - path: "anthropic"
+    origin: "https://api.anthropic.com"
+  - path: "openai"
+    origin: "https://api.openai.com"
+
+# 会话存档目录；不填默认 /data/session
+data-dir: "/data/session"

@@ -30,7 +30,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Hand
 		next.ServeHTTP(w, r)
 		return
 	}
-	up := p.cfg.Upstream(seg)
+	up := p.cfg.Proxy(seg)
 	if up == nil {
 		next.ServeHTTP(w, r)
 		return

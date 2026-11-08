@@ -39,7 +39,7 @@ func run() error {
 
 	cfgPath := os.Getenv("MEMGATE_CONFIG")
 	if cfgPath == "" {
-		cfgPath = "config.json"
+		cfgPath = "config.yaml"
 	}
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
@@ -63,7 +63,7 @@ func run() error {
 	}
 
 	px := proxy.New(cfg, store)
-	mcpSrv := mcp.New(cfg.MCPKeys, runner, store)
+	mcpSrv := mcp.New(cfg.KeyList, runner, store)
 	mcpHandler := requireKey(cfg, mcpSrv.Handler())
 
 	mux := http.NewServeMux()
@@ -89,7 +89,7 @@ func run() error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Info("listening", "addr", cfg.Listen, "upstreams", len(cfg.Upstreams), "keys", len(cfg.MCPKeys))
+		log.Info("listening", "addr", cfg.Listen, "proxies", len(cfg.ProxyList), "keys", len(cfg.KeyList))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}
