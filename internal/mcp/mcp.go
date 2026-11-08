@@ -1,4 +1,4 @@
-// Package mcp 暴露 session_bash 与 session_list 两个只读工具。
+// Package mcp exposes session_bash and session_list.
 package mcp
 
 import (
@@ -31,8 +31,8 @@ func (s *Server) Handler() *server.StreamableHTTPServer {
 	srv := server.NewMCPServer("session-gateway", "1.0.0",
 		server.WithToolCapabilities(false),
 		server.WithInstructions(
-			"会话存档检索。用 session_bash 在存档上执行只读 bash 命令："+
-				"grep 搜内容、ls 看会话、sed/jq 读细节。",
+			"Search past coding sessions. Use session_bash to run bash over the archive: "+
+				"grep for content, ls to list sessions, sed/jq to read details.",
 		),
 	)
 	srv.AddTool(bashTool(), s.handleBash)
@@ -46,18 +46,19 @@ func (s *Server) Handler() *server.StreamableHTTPServer {
 func bashTool() mcp.Tool {
 	return mcp.NewTool("session_bash",
 		mcp.WithDescription(
-			"在会话存档上执行 bash 命令。存档目录就是工作目录，里面是一个个 .jsonl 文件，"+
-				"每行一条消息：{\"ts\",\"role\",\"content\",\"session_id\"}。\n\n"+
-				"常用：\n"+
-				"  ls -lt | head             最近在聊什么\n"+
-				"  grep -rl '关键词' .        哪些会话提到过\n"+
-				"  grep -n '关键词' x.jsonl   定位到行号\n"+
-				"  sed -n '120,160p' x.jsonl  读某一段\n"+
-				"  jq -r '.content' x.jsonl   只取正文\n\n"+
-				"写操作会被拒绝。输出上限 256KB，超时 20 秒。"),
+			"Run bash over the session archive. The archive dir is the working directory; "+
+				"it holds one .jsonl per session, one message per line: "+
+				"{\"ts\",\"role\",\"content\",\"model\",\"session_id\",\"path\"}.\n\n"+
+				"Typical use:\n"+
+				"  ls -lt | head             what was worked on recently\n"+
+				"  grep -rl 'keyword' .      which sessions mention it\n"+
+				"  grep -n 'keyword' x.jsonl locate the line\n"+
+				"  sed -n '120,160p' x.jsonl read that region\n"+
+				"  jq -r '.content' x.jsonl  content only\n\n"+
+				"Output is capped at 256KB and 20s; exit code 1 (grep no match) is not an error."),
 		mcp.WithString("cmd",
 			mcp.Required(),
-			mcp.Description("要执行的 bash 命令，可以用管道"),
+			mcp.Description("bash command; pipes are allowed"),
 		),
 		mcp.WithReadOnlyHintAnnotation(true),
 		mcp.WithDestructiveHintAnnotation(false),
@@ -68,8 +69,8 @@ func bashTool() mcp.Tool {
 func listTool() mcp.Tool {
 	return mcp.NewTool("session_list",
 		mcp.WithDescription(
-			"列出所有会话存档：文件名、首条用户消息、行数、起止时间。"+
-				"比 session_bash 的 `ls` 更结构化，用来快速了解「有哪些对话」。"),
+			"List archived sessions: file name, first user message, line count, size, "+
+				"and last update. More structured than `ls` via session_bash."),
 		mcp.WithReadOnlyHintAnnotation(true),
 		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithIdempotentHintAnnotation(true),
@@ -101,7 +102,7 @@ func (s *Server) handleList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.Ca
 	}
 	var b strings.Builder
 	for _, s := range list {
-		fmt.Fprintf(&b, "%s\n  %s\n  %d 行 · %s · %s\n",
+		fmt.Fprintf(&b, "%s\n  %s\n  %d lines · %s · %s\n",
 			s.File, s.First, s.Lines, humanBytes(s.Bytes), s.Updated.Local().Format("2006-01-02 15:04"))
 	}
 	return mcp.NewToolResultText(b.String()), nil
