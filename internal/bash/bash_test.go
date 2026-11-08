@@ -40,7 +40,7 @@ func TestOutputTruncated(t *testing.T) {
 	if len(out) > Default.MaxOut+200 {
 		t.Fatalf("输出没有被截断: %d 字节", len(out))
 	}
-	if !strings.Contains(out, "已截断") {
+	if !strings.Contains(out, "truncated") {
 		t.Fatal("截断时应当注明")
 	}
 }
@@ -53,7 +53,7 @@ func TestTimeout(t *testing.T) {
 	defer func() { Default.Timeout = old }()
 
 	_, err := r.Run(context.Background(), "sleep 5")
-	if err == nil || !strings.Contains(err.Error(), "未完成") {
+	if err == nil || !strings.Contains(err.Error(), "timed out") {
 		t.Fatalf("期望超时错误，得到 %v", err)
 	}
 }

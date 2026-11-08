@@ -35,7 +35,7 @@ func New(dir, runAs string) (*Runner, error) {
 	}
 	u, err := user.Lookup(runAs)
 	if err != nil {
-		return nil, fmt.Errorf("找不到用户 %q: %w", runAs, err)
+		return nil, fmt.Errorf("user %q not found: %w", runAs, err)
 	}
 	if u.Uid == strconv.Itoa(os.Getuid()) {
 		return r, nil
@@ -43,7 +43,7 @@ func New(dir, runAs string) (*Runner, error) {
 	uid, err1 := strconv.Atoi(u.Uid)
 	gid, err2 := strconv.Atoi(u.Gid)
 	if err1 != nil || err2 != nil {
-		return nil, fmt.Errorf("用户 %q 的 uid/gid 不是数字", runAs)
+		return nil, fmt.Errorf("user %q has non-numeric uid/gid", runAs)
 	}
 	r.Cred = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)}
 	return r, nil
@@ -51,7 +51,7 @@ func New(dir, runAs string) (*Runner, error) {
 
 func (r *Runner) Run(ctx context.Context, script string) (string, error) {
 	if script == "" {
-		return "", errors.New("cmd 不能为空")
+		return "", errors.New("cmd is empty")
 	}
 	ctx, cancel := context.WithTimeout(ctx, Default.Timeout)
 	defer cancel()
@@ -72,11 +72,11 @@ func (r *Runner) Run(ctx context.Context, script string) (string, error) {
 	err := cmd.Run()
 	out := buf.String()
 	if w.truncated {
-		out += "\n…（输出超过 256KB，已截断；请缩小范围）"
+		out += "\n... (output exceeded 256KB, truncated; narrow the query)"
 	}
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
-			return out, fmt.Errorf("命令超过 %s 未完成，已终止", Default.Timeout)
+			return out, fmt.Errorf("command timed out after %s", Default.Timeout)
 		}
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {

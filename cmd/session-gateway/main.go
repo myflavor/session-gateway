@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 	if err := run(); err != nil {
-		slog.Error("启动失败", "err", err)
+		slog.Error("startup failed", "err", err)
 		os.Exit(1)
 	}
 }
@@ -57,9 +57,9 @@ func run() error {
 		return err
 	}
 	if runner.Cred != nil {
-		log.Info("bash 以降权用户执行", "uid", runner.Cred.Uid, "gid", runner.Cred.Gid)
+		log.Info("bash runs as reader", "uid", runner.Cred.Uid, "gid", runner.Cred.Gid)
 	} else {
-		log.Info("bash 以当前用户执行（可读写）", "dir", cfg.DataDir)
+		log.Info("bash runs as current user (read-write)", "dir", cfg.DataDir)
 	}
 
 	px := proxy.New(cfg, store)

@@ -23,11 +23,11 @@ type Config struct {
 func Load(path string) (*Config, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("读取 %s: %w", path, err)
+		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
 	var c Config
 	if err := yaml.Unmarshal(b, &c); err != nil {
-		return nil, fmt.Errorf("解析 %s: %w", path, err)
+		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
 	c.applyDefaults()
 	if err := c.validate(); err != nil {
@@ -48,13 +48,13 @@ func (c *Config) applyDefaults() {
 func (c *Config) validate() error {
 	for i, p := range c.ProxyList {
 		if strings.TrimSpace(p.Path) == "" {
-			return fmt.Errorf("proxy-list[%d] 缺少 path", i)
+			return fmt.Errorf("proxy-list[%d]: missing path", i)
 		}
 		if strings.ContainsAny(p.Path, "/?#") {
-			return fmt.Errorf("proxy-list[%d] 的 path 不能含 / ? #", i)
+			return fmt.Errorf("proxy-list[%d]: path must not contain / ? #", i)
 		}
 		if !strings.HasPrefix(p.Origin, "http://") && !strings.HasPrefix(p.Origin, "https://") {
-			return fmt.Errorf("proxy-list[%d] 的 origin 必须是 http(s)://", i)
+			return fmt.Errorf("proxy-list[%d]: origin must start with http(s)://", i)
 		}
 	}
 	return nil

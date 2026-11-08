@@ -34,7 +34,7 @@ func New(dir string) (*Store, error) {
 	// 只检查不创建：目录由 entrypoint 建好并设成 writer 可写、reader 只读，
 	// 进程自己 mkdir 会把权限设成运行用户，破坏这套边界
 	if _, err := os.Stat(dir); err != nil {
-		return nil, fmt.Errorf("存档目录不可用: %w", err)
+		return nil, fmt.Errorf("session dir unavailable: %w", err)
 	}
 	return &Store{dir: dir, locks: map[string]*sync.Mutex{}}, nil
 }

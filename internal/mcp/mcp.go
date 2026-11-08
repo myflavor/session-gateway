@@ -79,14 +79,14 @@ func listTool() mcp.Tool {
 func (s *Server) handleBash(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	script := req.GetString("cmd", "")
 	if strings.TrimSpace(script) == "" {
-		return mcp.NewToolResultError("cmd 不能为空"), nil
+		return mcp.NewToolResultError("cmd is empty"), nil
 	}
 	out, err := s.runner.Run(ctx, script)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 	if strings.TrimSpace(out) == "" {
-		return mcp.NewToolResultText("(无输出)"), nil
+		return mcp.NewToolResultText("(no output)"), nil
 	}
 	return mcp.NewToolResultText(out), nil
 }
@@ -97,7 +97,7 @@ func (s *Server) handleList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.Ca
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 	if len(list) == 0 {
-		return mcp.NewToolResultText("(存档为空)"), nil
+		return mcp.NewToolResultText("(archive is empty)"), nil
 	}
 	var b strings.Builder
 	for _, s := range list {
