@@ -15,9 +15,9 @@ type Proxy struct {
 
 type Config struct {
 	Listen    string   `yaml:"listen"`
+	DataDir   string   `yaml:"data-dir"`
 	KeyList   []string `yaml:"key-list"`
 	ProxyList []Proxy  `yaml:"proxy-list"`
-	DataDir   string   `yaml:"data-dir"`
 }
 
 func Load(path string) (*Config, error) {
